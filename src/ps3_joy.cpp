@@ -11,7 +11,7 @@
 #include <thread>
 
 #include "ros/ros.h"
-#include "beginner_tutorials/ps3.h"
+#include "loggerhead_bot/ps3.h"
 
 #include <sstream>
 
@@ -25,7 +25,7 @@ vector<int> joy_axis;
 
 void ros_pub(ros::Publisher& ps3_pub){
     ros::Rate r(10);
-    beginner_tutorials::ps3 msg;
+    loggerhead_bot::ps3 msg;
     while (ros::ok()) {
         msg.axis = joy_axis;
         vector<signed char> tmp(joy_button.begin(),joy_button.end());
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 
     ros::init(argc, argv, "ps3_pub");
     ros::NodeHandle n;
-    ros::Publisher ps3_pub= n.advertise<beginner_tutorials::ps3>("ps3_controller", 50);
+    ros::Publisher ps3_pub= n.advertise<loggerhead_bot::ps3>("ps3_controller", 50);
     int joy_fd(-1), num_of_axis(0), num_of_buttons(0);
     char name_of_joystick[80];
 

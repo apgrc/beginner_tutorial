@@ -6,7 +6,7 @@
 #include <iomanip>
 
 #include "ros/ros.h"
-#include "beginner_tutorials/ps3.h"
+#include "loggerhead_bot/ps3.h"
 
 #define maxOut 7199
 #define k 9
@@ -48,28 +48,27 @@ LibSerial::SerialStream serial_stream;
 void receive_candy(LibSerial::SerialStream& stream) {
   receive candy;
   while (stream.IsOpen()) {
-      if (stream.IsDataAvailable()) {
-          receive candy;
-          stream.read((char *) (&candy), sizeof(candy));
-          for (int i = 0; i < sizeof(candy.distance) / sizeof(candy.distance[0]); i++) {
-              cout << setw(10) << candy.distance[i];
-          }
-          cout << endl;
-      }
+    if (stream.IsDataAvailable()) {
+        receive candy;
+        stream.read((char *) (&candy), sizeof(candy));
+        for (int i = 0; i < sizeof(candy.distance) / sizeof(candy.distance[0]); i++) {
+            cout << setw(10) << candy.distance[i];
+        }
+        cout << endl;
+    }
   }
 }
 
-// void ps3Callback(const  beginner_tutorials::ps3::ConstPtr& msg)
-void ps3Callback(const  beginner_tutorials::ps3::ConstPtr& msg)
+// void ps3Callback(const  loggerhead_bot::ps3::ConstPtr& msg)
+void ps3Callback(const loggerhead_bot::ps3::ConstPtr& msg)
 {
-  // beginner_tutorials::ps3& data = msg;
   order out;
   out.command = Continue;
   int32_t tmp = (msg->axis[R2_ANALOG] + 32767) / k;  
   if (msg->buttons[L1_DIGITAL])
     tmp = tmp * -1;
 
-  cout << "input = " << tmp << endl;
+  // cout << "input = " << tmp << endl;
   out.out_m0 = tmp;
   out.out_m1 = tmp;
   if(msg->axis[LEFT_STICK_HORIZONTAL] > 0)
@@ -79,17 +78,50 @@ void ps3Callback(const  beginner_tutorials::ps3::ConstPtr& msg)
 
   serial_stream.write(reinterpret_cast<const char *>(&out), sizeof(out));
   // cout << "Sended " << tmp << endl;
-  cout << " axis: ";
-  for (size_t i(0); i < msg->axis.size(); ++i)
-    cout << " " << setw(5) << msg->axis[i];
-  cout << endl;
-
-  cout << "  button: ";
-  for (size_t i(0); i < msg->buttons.size(); ++i)
-    cout << " " << (int) msg->buttons[i];
-  cout << endl;
+  // cout << " axis: ";
+  // for (size_t i(0); i < msg->axis.size(); ++i)
+    // cout << " " << setw(5) << msg->axis[i];
+  // cout << endl;
+//
+  // cout << "  button: ";
+  // for (size_t i(0); i < msg->buttons.size(); ++i)
+    // cout << " " << (int) msg->buttons[i];
+  // cout << endl;
 }
 
+void topi_menu(LibSerial::SerialStream& serial_stream) {
+  int num = 0;
+  string input;
+  order topi_order;
+  while (ros::ok()) {
+    input.clear();
+    cout << "4: start" << endl;
+    cout << "5: break (stop)" << endl;
+    cout << "6: move some steps" << endl;
+    // cout << "R: reset position" << endl;
+    cout << "Input command: ";
+    getline(cin, input);
+    // input << num;
+    // serial_stream << input[0];
+    switch (input[0]) {
+      case '4':
+        topi_order.command = Sensor_Start;
+        serial_stream.write(reinterpret_cast<const char *>(&topi_order), sizeof(topi_order));
+        //TODO
+        break;
+      case '5':
+        topi_order.command = Sensor_Stop;
+        serial_stream.write(reinterpret_cast<const char *>(&topi_order), sizeof(topi_order));
+        //TODO
+        break;
+      case '6':
+        topi_order.command = Reset;
+        serial_stream.write(reinterpret_cast<const char *>(&topi_order), sizeof(topi_order));
+        //TODO
+        break;
+    }
+  }
+}
 int main(int argc, char *argv[]) {
 
   ros::init(argc, argv, "ps3_listener");
@@ -98,12 +130,14 @@ int main(int argc, char *argv[]) {
 
   serial_stream.Open("/dev/ttyACM0");
   serial_stream.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
+  cout << "connected!" << endl;
 
   std::thread t(receive_candy, std::ref(serial_stream));
-  cout << "connected!" << endl;
+  std::thread t2(topi_menu, std::ref(serial_stream));
 
   ros::spin();
   serial_stream.Close();
   t.join();
+  t2.join();
   return 0;
 }
