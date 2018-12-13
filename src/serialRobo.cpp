@@ -68,15 +68,22 @@ void ps3Callback(const loggerhead_bot::ps3::ConstPtr& msg)
   if (msg->buttons[L1_DIGITAL])
     tmp = tmp * -1;
 
-  // cout << "input = " << tmp << endl;
   out.out_m0 = tmp;
   out.out_m1 = tmp;
-  if(msg->axis[LEFT_STICK_HORIZONTAL] > 0)
-    out.out_m0 -= msg->axis[LEFT_STICK_HORIZONTAL] / k;
-  else 
-    out.out_m1 += msg->axis[LEFT_STICK_HORIZONTAL] / k;
-
+  if (msg->buttons[L1_DIGITAL]){
+    if(msg->axis[LEFT_STICK_HORIZONTAL] > 0)
+      out.out_m0 -= (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
+    else 
+      out.out_m1 += (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
+  }
+  else {
+    if(msg->axis[LEFT_STICK_HORIZONTAL] > 0)
+      out.out_m1 -= (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
+    else 
+      out.out_m0 += (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
+  }
   serial_stream.write(reinterpret_cast<const char *>(&out), sizeof(out));
+  // cout << "input = " << tmp << endl;
   // cout << "Sended " << tmp << endl;
   // cout << " axis: ";
   // for (size_t i(0); i < msg->axis.size(); ++i)
@@ -95,9 +102,9 @@ void topi_menu(LibSerial::SerialStream& serial_stream) {
   order topi_order;
   while (ros::ok()) {
     input.clear();
-    cout << "4: start" << endl;
-    cout << "5: break (stop)" << endl;
-    cout << "6: move some steps" << endl;
+    cout << "4: Sensor Start" << endl;
+    cout << "5: Sensor Stop" << endl;
+    cout << "6: Sensro Restart" << endl;
     // cout << "R: reset position" << endl;
     cout << "Input command: ";
     getline(cin, input);
