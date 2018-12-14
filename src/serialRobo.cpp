@@ -65,22 +65,19 @@ void ps3Callback(const loggerhead_bot::ps3::ConstPtr& msg)
   order out;
   out.command = Continue;
   int32_t tmp = (msg->axis[R2_ANALOG] + 32767) / k;  
-  if (msg->buttons[L1_DIGITAL])
-    tmp = tmp * -1;
 
   out.out_m0 = tmp;
   out.out_m1 = tmp;
+
+  if(msg->axis[LEFT_STICK_HORIZONTAL] > 0)
+    out.out_m0 -= (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
+  else 
+    out.out_m1 += (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
+
+
   if (msg->buttons[L1_DIGITAL]){
-    if(msg->axis[LEFT_STICK_HORIZONTAL] > 0)
-      out.out_m0 -= (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
-    else 
-      out.out_m1 += (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
-  }
-  else {
-    if(msg->axis[LEFT_STICK_HORIZONTAL] > 0)
-      out.out_m1 -= (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
-    else 
-      out.out_m0 += (2 * msg->axis[LEFT_STICK_HORIZONTAL]) / k;
+  out.out_m0 = out.out_m0 * -1;
+  out.out_m1 = out.out_m1 * -1;
   }
   serial_stream.write(reinterpret_cast<const char *>(&out), sizeof(out));
   // cout << "input = " << tmp << endl;
